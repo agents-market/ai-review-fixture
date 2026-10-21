@@ -65,6 +65,32 @@ repository has deeper flaws, and this says nothing about them.
   known: `CWE-1321` was reached for, and the model had to settle for
   `CWE-915`.
 
+## The style review, measured the same way
+
+The style pipeline runs on the same pull request, and the first thing the
+fixture showed about it was that it said everything twice.
+
+`aggregate_style` emits its own copy of the findings array, re-derived from
+the analyze stage's output. The two copies disagreed on line numbers, and
+the consumer's merge drops a finding only when it repeats at the same file
+and line — so both survived. On this diff: **9 comments for about six
+issues**, with "no type annotation" three times, each at 99% confidence.
+
+In 3.2.0 the aggregate copies the analyze stage's findings verbatim, and the
+analyze stage is told that two findings with one cause are one finding, with
+the other places named in the description. Severity and confidence were
+separated as well: confidence is how sure you are the pattern is there,
+severity is what it costs the reader.
+
+| Version | Comments in one run | What they said |
+|---|---|---|
+| 3.1.0 | 9 | "no type annotation" three times at 99%, plus a hardcoded credential as CRITICAL |
+| 3.2.0 | 5 findings, 3 new comments | one comment naming all five functions, `low` |
+
+The security finding did not disappear: the hardcoded credential is the
+audit's business, and the audit reports it as `CWE-798` in the same pull
+request. Two pipelines, one job each.
+
 ## Reproducing it
 
 ```bash
