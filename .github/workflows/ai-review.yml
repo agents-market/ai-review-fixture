@@ -1,0 +1,22 @@
+name: AI Review
+
+# The consumer's workflow, unchanged in shape: one reusable workflow call, one
+# secret. The review lives in agents-market/github-workflows, so a fix there
+# reaches every consumer on the next pin bump.
+#
+# The SHA is pinned, never a tag: a tag can move, a SHA cannot.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  review:
+    uses: agents-market/github-workflows/.github/workflows/ai-review.yml@32ec7285c65d0a83e15a42e0fe329751baa5c7e8
+    secrets:
+      MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
