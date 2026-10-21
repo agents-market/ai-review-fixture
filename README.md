@@ -47,6 +47,13 @@ Two limits are worth naming before the first result is read:
   (268 entries, snapshot 2026-10-21). A weakness class outside it has no id to
   cite, and the review says `null` rather than inventing one.
 
+## Results
+
+Six runs over the same diff are written up in [`RESULTS.md`](RESULTS.md). The
+short version: every run found **eight of the eleven** planted weaknesses,
+no run invented anything at the default severity floor, and *which* eight
+changed every time — the union across runs covers all eleven.
+
 ## Running it
 
 The review needs `MINIMAX_API_KEY` as a repository secret. The pipelines
