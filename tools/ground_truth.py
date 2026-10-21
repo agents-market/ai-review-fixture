@@ -53,8 +53,10 @@ def main() -> int:
             print(f"  {p}", file=sys.stderr)
         return 1
     if not findings:
-        print("  no VULN markers found — the ground truth would be empty", file=sys.stderr)
-        return 1
+        # The markers live in the branch under test; main carries the ground
+        # truth that was generated from it. Nothing to do here.
+        print("  no VULN markers in this tree — the ground truth stays as it is")
+        return 0
 
     (ROOT / ".github").mkdir(exist_ok=True)
     (ROOT / ".github/ground-truth.json").write_text(
