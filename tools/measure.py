@@ -13,7 +13,11 @@ weakness three lines away from the planted one found it. The line distance is
 printed, so a near miss is visible.
 
 Usage:
-  python3 tools/measure.py [pull_request_number]
+  python3 tools/measure.py [pull_request_number] [--since ISO8601]
+
+`--since` measures one run: a pull request accumulates the comments of every
+run, and the union of two runs answers a different question than either of
+them does.
 """
 import json
 import pathlib
@@ -42,12 +46,24 @@ def issue_comments(pr: int) -> list[dict]:
 
 
 def main() -> int:
-    pr = int(sys.argv[1]) if len(sys.argv) > 1 else 1
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    pr = int(args[0]) if args else 1
+    since = None
+    if "--since" in sys.argv:
+        since = sys.argv[sys.argv.index("--since") + 1]
     truth = json.loads((ROOT / ".github/ground-truth.json").read_text())["vulnerabilities"]
-    inline = comments(pr)
+    every = comments(pr)
     summary = issue_comments(pr)
+    # The reference workflow reviews with both pipelines. Each owns its threads
+    # through a body marker, and only the security audit has a ground truth.
+    marker = "am:code-review-security-audit"
+    inline = [c for c in every if marker in (c.get("body") or "")]
+    if since:
+        inline = [c for c in inline if (c.get("created_at") or "") >= since]
+    other = len(every) - len(inline)
 
-    print(f"  PR #{pr}: {len(inline)} inline comments, {len(summary)} summary comments")
+    print(f"  PR #{pr}: {len(inline)} audit comments (+{other} from the other pipelines), "
+          f"{len(summary)} summary comments")
     body = "\n".join(c.get("body", "") for c in summary)
 
     found, missed, invented = [], [], []
