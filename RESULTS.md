@@ -18,6 +18,13 @@ how many findings the prompt allowed.
 
 ## What this says
 
+A later CI run added the open redirect to the union (four of its findings were
+new comments; the rest repeated lines the earlier runs had already covered).
+One CI run failed outright — `Retry exhausted after 4 attempts`, the provider,
+not the pipeline — and the summary comment said so in one line: "Pipeline did
+not complete". That is the honest path, and it is the one the summary comment
+now takes when there is no result at all.
+
 **Every run finds eight of eleven. Which eight changes.** Run 1 found the
 SQL injection and missed the open redirect; run 2 found the open redirect and
 missed the path traversal; run 4 found both and missed the SQL injection
