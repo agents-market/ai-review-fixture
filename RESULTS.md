@@ -63,9 +63,10 @@ repository has deeper flaws, and this says nothing about them.
 The pipeline now reviews twice. The second pass reads the first pass's findings
 and is asked for the gaps only — the weaknesses the first pass did not report.
 
-**In CI, on the published 3.3.0, on this pull request: all eleven.** Twelve
-findings, of which eleven are the planted weaknesses and one is an observation
-about a missing ownership check. The report names every one of them:
+**In CI, on the published 3.3.0, on this pull request: all eleven — twice in a
+row.** Twelve findings each time, of which eleven are the planted weaknesses
+and one is an observation about a missing ownership check (`CWE-639`). The
+report names every one of them:
 
 | Severity | Findings | What they are |
 |---|---|---|
