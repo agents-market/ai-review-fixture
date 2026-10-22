@@ -17,6 +17,6 @@ permissions:
 
 jobs:
   review:
-    uses: agents-market/github-workflows/.github/workflows/ai-review.yml@0050bb90bf1be21574bb2c572b75add3ce1d4011
+    uses: agents-market/github-workflows/.github/workflows/ai-review.yml@e9d5e93609d1c2949250a035818fbde8805d37bb
     secrets:
       MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
