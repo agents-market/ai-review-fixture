@@ -114,6 +114,38 @@ Four prompt variants were measured over four runs each. They differ by one to
 three runs at 11 of 11 — inside the noise of a sample that size. The one that
 shipped is the variant whose second pass fires most reliably.
 
+## The severity floor, measured on the current pipeline (3.3.0)
+
+Three runs over the same diff, one per floor, same ground truth:
+
+| Floor | deep_review | gap_review | Dropped by the stage | Planted found | Missed |
+|-------|-------------|------------|----------------------|----------------|--------|
+| `high` | 8 | 3 | 2 | **11 / 11** | — |
+| `critical` | 8 | 3 | 0 | **11 / 11** | — |
+| `low` | 8 | 0 | 8 | **8 / 11** | open redirect, prototype pollution, weak crypto |
+
+**The floor is a hint to the model, not a filter.** The stage prompt says
+"drop findings below the severity floor rather than shrinking the JSON", and
+the model puts what it dropped into a separate `rejected` array. Nothing
+filters afterwards, so what survives is the model's judgement of its own
+ratings — and its judgements move between runs.
+
+Three consequences, all measured above:
+
+- **The sets are not nested.** A higher floor is not a subset of a lower one.
+  The severity is the model's own rating, and it moves from run to run.
+- **Raising the floor does not reliably shrink the output.** At `high` and at
+  `critical` the audit still reported all eleven planted weaknesses; the floor
+  dropped nothing real.
+- **Lowering the floor can lose real weaknesses.** At `low` the audit dropped
+  the open redirect, the prototype pollution and the weak crypto, and the
+  second pass then found nothing to replace them. The same happened on the
+  single-pass pipeline: at `low` it dropped the hardcoded password and the SQL
+  injection while adding findings nothing planted.
+
+So `medium` — the default — stays the default: it is the only floor that lost
+nothing in any run, on either version of the pipeline.
+
 ## What would move the numbers
 
 - **Review per file instead of per diff.** The model spends its findings on a
