@@ -32,6 +32,12 @@ const SPEC_FILE = arg('spec',
   '/home/vladimirmyshkovski/Programs/TypeScript/github-workflows/pipelines/code-review-security-audit/pipeline.yaml');
 const DIFF_FILE = arg('diff', '/tmp/opencode/diff.txt');
 const SEVERITY = arg('severity', 'medium');
+// 'generic', because that is what the CI run passes: the fixture's diff is
+// TypeScript and Python at once, and the workflow sends `language: generic`.
+// The probe used to send 'typescript', so it measured something the CI never
+// runs — and the CI's own noise (one to three extra comments a run) did not
+// show up locally.
+const LANGUAGE = arg('language', 'generic');
 const PREV = arg('prev', null);
 const OUT = arg('out', null);
 const RAW = arg('raw', null);
@@ -62,7 +68,7 @@ if (PREV) {
 const provider = new MiniMaxProvider({ apiKey: process.env.MINIMAX_API_KEY });
 const result = await runPipelineV2({
   spec: SPEC,
-  inputs: { code_diff: DIFF, language: 'typescript', severity_threshold: SEVERITY, focus_area: 'security' },
+  inputs: { code_diff: DIFF, language: LANGUAGE, severity_threshold: SEVERITY, focus_area: 'security' },
   deps: {
     provider,
     registry: new LLMProviderRegistry([provider]),
@@ -102,7 +108,7 @@ for (const f of [...deep, ...gap]) {
   }
 }
 
-console.log(`  severity=${SEVERITY}  сканер: ${scan.length} кандидатов, deep_review: ${deep.length} находок, gap_review: ${gap.length} находок, отклонено: ${rejected.length}`);
+console.log(`  language=${LANGUAGE} severity=${SEVERITY}  сканер: ${scan.length} кандидатов, deep_review: ${deep.length} находок, gap_review: ${gap.length} находок, отклонено: ${rejected.length}`);
 console.log(`  накрыто закладок: ${found.size}/11  → ${[...found].sort().join(', ')}`);
 const missing = TRUTH.map(([t]) => t).filter((t) => !found.has(t));
 console.log(`  не накрыто: ${missing.join(', ') || '—'}`);
@@ -116,6 +122,33 @@ const clash = gap.filter((f) => deepKeys.has(key(f)));
 if (gap.length) {
   console.log(`  второе проходом повторил строку первого: ${clash.length ? clash.map((f) => `${f.file}:${f.line} ${f.cwe_id}`).join(', ') : '—'}`);
   console.log(`  находок всего: ${deep.length + gap.length}`);
+}
+
+// What the reader actually sees: the Action merges every stage's findings and
+// drops one that repeats at the same file, line and class. Count that.
+const cweOf = (f) => String(f.cwe_id ?? f.cwe ?? '').toUpperCase();
+const truthIds = new Map(TRUTH.map(([t, file]) => [t, file]));
+const ALIASED = Object.entries(ALIAS).flatMap(([t, ids]) => ids.map((id) => [id, t]));
+const plantedOf = (f) => {
+  const id = cweOf(f);
+  const direct = truthIds.get(id);
+  const alias = ALIASED.find(([a]) => a === id)?.[1];
+  const truth = direct ?? alias;
+  return truth && String(f.file || '').includes(truthIds.get(truth)) ? truth : null;
+};
+const merged = new Map();
+for (const f of [...deep, ...gap]) {
+  const k = `${f.file}::${f.line ?? ''}::${cweOf(f)}`;
+  if (!merged.has(k)) merged.set(k, f);
+}
+const visible = [...merged.values()];
+const visiblePlanted = visible.filter((f) => plantedOf(f));
+const visibleExtra = visible.filter((f) => !plantedOf(f));
+console.log(`  ЧИТАТЕЛЬ ВИДИТ: ${visible.length} комментариев = ${visiblePlanted.length} закладок + ${visibleExtra.length} лишних`);
+if (visibleExtra.length) {
+  for (const f of visibleExtra) {
+    console.log(`    лишний: ${f.file}:${f.line} ${cweOf(f)} — ${String(f.description ?? '').slice(0, 110)}`);
+  }
 }
 
 if (OUT) {
