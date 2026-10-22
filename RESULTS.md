@@ -267,7 +267,7 @@ them is a planted weakness.** Nothing invented, and the two comments that used
 to drift — `CWE-259`/`CWE-798` and `CWE-915`/`CWE-1321` — are one comment
 each.
 
-One run in eight produced no usable review: the model returned prose instead
+One run in six produced no usable review: the model returned prose instead
 of the schema, twice, and the job went red — while the pull request kept the
 standing review from the previous run. A failed run leaves the last good
 review in place and takes no finding back.
