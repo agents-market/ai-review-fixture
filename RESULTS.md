@@ -63,10 +63,11 @@ repository has deeper flaws, and this says nothing about them.
 The pipeline now reviews twice. The second pass reads the first pass's findings
 and is asked for the gaps only — the weaknesses the first pass did not report.
 
-**In CI, on the published 3.3.0, on this pull request: all eleven — twice in a
-row.** Twelve findings each time, of which eleven are the planted weaknesses
-and one is an observation about a missing ownership check (`CWE-639`). The
-report names every one of them:
+**In CI, on the published 3.3.0, on this pull request: all eleven — three runs
+in a row.** Twelve, twelve and fourteen findings; eleven of them are the
+planted weaknesses every time, and the rest are observations about missing
+controls (`CWE-639`, "no auth / no CSRF", "TOCTOU on the archive"). The report
+names every planted weakness:
 
 | Severity | Findings | What they are |
 |---|---|---|
@@ -90,9 +91,9 @@ floor:
 | 5 | 8 | 4 | 8 / 11 | 4 |
 | 6 | 5 | 8 | 8 / 11 | 5 |
 
-Two more runs died on the provider (`MiniMax API 529 overloaded_error`) before
+Five more runs died on the provider (`MiniMax API 529 overloaded_error`) before
 they produced anything — including the first CI attempt at 3.3.0, which then
-recovered on the retry.
+recovered on the retry. The provider was the flakier half of this measurement.
 
 **The union is never worse than one pass.** The second pass only adds findings;
 it cannot lose one. In three of six local runs it reached all eleven, and in the
