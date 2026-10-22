@@ -62,7 +62,23 @@ repository has deeper flaws, and this says nothing about them.
 
 The pipeline now reviews twice. The second pass reads the first pass's findings
 and is asked for the gaps only — the weaknesses the first pass did not report.
-The same diff, the same ground truth, the default `medium` floor:
+
+**In CI, on the published 3.3.0, on this pull request: all eleven.** Twelve
+findings, of which eleven are the planted weaknesses and one is an observation
+about a missing ownership check. The report names every one of them:
+
+| Severity | Findings | What they are |
+|---|---|---|
+| critical | 3 | pickle deserialization, the committed password, `os.system` |
+| high | 6 | SQL injection, path traversal, SSRF, XSS, prototype pollution, `Math.random` tokens |
+| medium | 2 of 3 | open redirect, the ReDoS regex |
+
+(The prototype pollution is reported under `CWE-915`, the neighbouring class the
+catalogue does have — see the catalogue note below. The weakness and the line
+are right; the id is the neighbour's.)
+
+The same diff, the same ground truth, measured locally, the default `medium`
+floor:
 
 | # | deep_review | gap_review | Planted found | Extra findings |
 |---|-------------|------------|----------------|-----------------|
@@ -70,14 +86,18 @@ The same diff, the same ground truth, the default `medium` floor:
 | 2 | 8 | 3 | **11 / 11** | 0 |
 | 3 | 11 | 5 | **11 / 11** | 5 |
 | 4 | 8 | 3 | **11 / 11** | 0 |
+| 5 | 8 | 4 | 8 / 11 | 4 |
+| 6 | 5 | 8 | 8 / 11 | 5 |
 
-A fifth run died on the provider (`MiniMax API 529 overloaded_error`) before it
-produced anything.
+Two more runs died on the provider (`MiniMax API 529 overloaded_error`) before
+they produced anything — including the first CI attempt at 3.3.0, which then
+recovered on the retry.
 
 **The union is never worse than one pass.** The second pass only adds findings;
-it cannot lose one. In three of four runs it reached all eleven, and in the best
-run the union was exactly the eleven planted weaknesses — no duplicate, nothing
-invented.
+it cannot lose one. In three of six local runs it reached all eleven, and in the
+best run the union was exactly the eleven planted weaknesses — no duplicate,
+nothing invented. In the other three it added findings the reader does not need
+without closing a gap.
 
 **Where the extra findings come from.** The second pass sometimes reports a
 weakness the first pass had already reported under a different CWE id or on a
@@ -126,6 +146,17 @@ severity is what it costs the reader.
 The security finding did not disappear: the hardcoded credential is the
 audit's business, and the audit reports it as `CWE-798` in the same pull
 request. Two pipelines, one job each.
+
+## Two rules of the instrument
+
+**Everything written about the measurement lives on `main`, not on the pull
+request's branch.** The workflow computes the diff as `main...branch`, so a
+report about the runs would be part of what gets reviewed — one run at 3.3.0
+"found" five of eleven because it was reading the report instead of the code.
+
+**A re-run updates the comments it already posted instead of creating new
+ones.** Measuring one run therefore means filtering on the last touch of a
+comment, not on the date it was created (`tools/measure.py --since`).
 
 ## Reproducing it
 

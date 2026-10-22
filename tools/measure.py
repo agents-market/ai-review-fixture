@@ -59,7 +59,11 @@ def main() -> int:
     marker = "am:code-review-security-audit"
     inline = [c for c in every if marker in (c.get("body") or "")]
     if since:
-        inline = [c for c in inline if (c.get("created_at") or "") >= since]
+        # A re-run *updates* the comments it already posted instead of
+        # creating new ones, so a comment can be older than the run that
+        # wrote it. The time that belongs to a run is the last touch.
+        inline = [c for c in inline
+                  if max(c.get("created_at") or "", c.get("updated_at") or "") >= since]
     other = len(every) - len(inline)
 
     print(f"  PR #{pr}: {len(inline)} audit comments (+{other} from the other pipelines), "
