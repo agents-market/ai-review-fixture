@@ -51,6 +51,8 @@ comments landed on real diff lines.
 run that found it named it `CWE-915` — a real weakness class, a different
 one. A weakness outside the catalogue has no id to cite, which is the point
 of the closed set, and it is a gap worth knowing about.
+*(Closed on 2026-10-23 — the catalogue grew to 269 entries and now carries
+`CWE-1321`. See "The comment rule, measured" below.)*
 
 ## What it does not say
 
@@ -213,10 +215,62 @@ nothing in any run, on either version of the pipeline.
 
 - **Review per file instead of per diff.** The model spends its findings on a
   diff of any size; two files reviewed separately would each get their own
-  budget. This is a change to the pipeline, not to the workflow.
-- **A catalogue that covers what the model wants to say.** The gaps are
-  known: `CWE-1321` was reached for, and the model had to settle for
-  `CWE-915`.
+  budget. This is a change to the pipeline, not to the workflow — and on a
+  two-file fixture it cannot be shown to help.
+- **A bigger fixture.** Eleven weaknesses in two files cannot show what a
+  review does on a real pull request: the comment count, the noise, and the
+  cost per file all need more than two files to mean anything.
+
+## The comment rule, measured (2026-10-23)
+
+The tables above count findings. What a reader sees is comments, and comments
+were piling up: the same weakness came back on a neighbouring line — the
+model's line for a weakness moves by 5 to 14 lines — the key was
+`file::line`, and every re-run added a copy. On 2026-10-22 the pull request
+carried **52 comments for 11 planted weaknesses**.
+
+The rule now keys a comment by the weakness, not by the line: the CWE id for
+the audit, the category tag for the style review. A new run closes the
+comment that carried the same weakness and posts the fresh one.
+
+Measured on the published `code-review-security-audit@3.4.0`, the same diff,
+starting from a pull request with no comments at all:
+
+| Run | Audit | Style | What the reader sees |
+|-----|-------|-------|----------------------|
+| 1, from clean | 10 posted, 10 live | 7 posted, 7 live | 10 of 11 planted, 0 invented |
+| 2 | 11 posted, 10 replaced, **11 live** | 4 posted, 4 replaced, **7 live** | **11 of 11, 0 invented** |
+
+**The count does not grow.** The second run replaced ten of the eleven
+comments and added none; the style review replaced four and added none. The
+live set is bounded by the weaknesses themselves, not by the number of runs.
+
+Three bugs were found on the way, each visible only in the measurement:
+
+- **A comment of another class hid the finding on its line.** The live set was
+  keyed by `file::line`, so any comment standing there suppressed every
+  finding on that line — the SSRF finding (`CWE-918`) was swallowed by a
+  `CWE-330` comment that stood on its line. A line now holds a list of
+  comments, and only a comment of the same class hides a finding.
+- **Two ids for one weakness never merged.** The model called the weak
+  password `CWE-259` in one run and `CWE-798` in another; the key changed and
+  the old comment stood forever. A small map of known pairs now gives both ids
+  one class. The id the reader sees is still the model's own.
+- **The catalogue could not name prototype pollution.** `CWE-1321` was in the
+  catalogue's scope list and was thrown out by the blocklist — the word
+  `attribute` was there for other entries and dropped every weakness whose
+  name ends in that word. Rebuilt from MITRE: 269 entries, snapshot
+  2026-10-23, one id more.
+
+**The reader now sees eleven comments for eleven weaknesses, and every one of
+them is a planted weakness.** Nothing invented, and the two comments that used
+to drift — `CWE-259`/`CWE-798` and `CWE-915`/`CWE-1321` — are one comment
+each.
+
+One run in eight produced no usable review: the model returned prose instead
+of the schema, twice, and the job went red — while the pull request kept the
+standing review from the previous run. A failed run leaves the last good
+review in place and takes no finding back.
 
 ## The style review, measured the same way
 
