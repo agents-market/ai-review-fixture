@@ -63,10 +63,11 @@ repository has deeper flaws, and this says nothing about them.
 The pipeline now reviews twice. The second pass reads the first pass's findings
 and is asked for the gaps only — the weaknesses the first pass did not report.
 
-**In CI, on the published 3.3.0, on this pull request: all eleven — twice in a
-row.** Twelve findings each time, of which eleven are the planted weaknesses
-and one is an observation about a missing ownership check (`CWE-639`). The
-report names every one of them:
+**In CI, on the published 3.3.0, on this pull request: all eleven — three runs
+in a row.** Twelve, twelve and fourteen findings; eleven of them are the
+planted weaknesses every time, and the rest are observations about missing
+controls (`CWE-639`, "no auth / no CSRF", "TOCTOU on the archive"). The report
+names every planted weakness:
 
 | Severity | Findings | What they are |
 |---|---|---|
@@ -90,9 +91,9 @@ floor:
 | 5 | 8 | 4 | 8 / 11 | 4 |
 | 6 | 5 | 8 | 8 / 11 | 5 |
 
-Two more runs died on the provider (`MiniMax API 529 overloaded_error`) before
+Five more runs died on the provider (`MiniMax API 529 overloaded_error`) before
 they produced anything — including the first CI attempt at 3.3.0, which then
-recovered on the retry.
+recovered on the retry. The provider was the flakier half of this measurement.
 
 **The union is never worse than one pass.** The second pass only adds findings;
 it cannot lose one. In three of six local runs it reached all eleven, and in the
@@ -112,6 +113,101 @@ something wrong happens. The rules reduce the noise; they do not remove it.
 Four prompt variants were measured over four runs each. They differ by one to
 three runs at 11 of 11 — inside the noise of a sample that size. The one that
 shipped is the variant whose second pass fires most reliably.
+
+## The noise, counted the way the reader sees it (2026-10-22)
+
+The "Extra findings" column above counts *raw* findings: two passes reporting
+the same weakness twice, or under a neighbouring CWE id, count as two. The
+reader never sees that — the Action merges every stage's findings by
+`file::line::cwe` and posts one comment per survivor. Two things had also
+drifted in the instrument: the probe sent `language: typescript` while the CI
+sends `language: generic` (this diff is TypeScript and Python at once), and
+the earlier local runs were made while the report itself was still inside the
+reviewed diff. Both are fixed; the probe now sends what the CI sends.
+
+Six runs of the published spec, the same diff, the `medium` floor, counting
+what the reader gets:
+
+| # | deep_review | gap_review | Reader-visible comments | Planted found | Extra comments |
+|---|-------------|------------|-------------------------|---------------|----------------|
+| 1 | 8 | 0 | 8 | 8 / 11 | 0 |
+| 2 | 8 | 3 | 11 | **11 / 11** | 0 |
+| 3 | 8 | 3 | 11 | **11 / 11** | 0 |
+| 4 | 11 | 0 | 11 | **11 / 11** | 0 |
+| 5 | 8 | 6 | 12 | 10 / 11 | 1 (`CWE-770`) |
+| 6 | 8 | 0 | 8 | 8 / 11 | 0 |
+
+**One extra comment in six runs.** Most of the "extra findings" in the table
+above were the same weakness counted twice.
+
+Three ways to make the second pass quieter were measured. Five to seven runs
+each, the same diff and the same floor; the first group was measured before
+the instrument fix (`language: typescript`) and the second after it
+(`language: generic`), so the rows are comparable only inside a group.
+
+| Variant | What changed | Planted (sum of runs) | Extra comments |
+|---------|--------------|-----------------------|----------------|
+| *`language: typescript`, 5–7 runs* | | | |
+| published | — | 51 / 55 | 0 |
+| v2 | the two rules rewritten | 53 / 55 | 3 |
+| v3 | a third rule: judge your own fix | 40 / 55 | 4 |
+| v4 | a separate `observations` list | 65 / 77 | 0 |
+| *`language: generic`, 6 runs each* | | | |
+| published | — | 59 / 66 | 1 |
+| v4 | the same split | 62 / 66 | 4 |
+
+**None of them is better.** The differences sit inside the noise of a
+five-run sample: this fixture answers "11 of 11 or not" with a spread of
+three. Two things are worth keeping from the experiment:
+
+- The schema split works as designed — the missing-control remarks ("the
+  /comments route has no authentication check", "no rate limit on
+  /password-reset") land in `observations` and never become comments. But the
+  model does not do it every time: two of v4's four extra comments were
+  exactly that class, in `findings`.
+- The noise that is left has two kinds, and only one of them can be fixed
+  without the model's cooperation. The second pass sometimes reports a
+  weakness the first pass already reported under a neighbouring CWE id
+  (`CWE-330` for `CWE-338`, `CWE-259` for `CWE-798`). That is one weakness on
+  one line, and a consumer that merged by `file::line` instead of
+  `file::line::cwe` would show one comment. The catalogue carries both ids on
+  purpose, so this is not a defect in the pipeline — it is a decision the
+  consumer can make.
+
+Nothing was published from this experiment: the shipped spec keeps the
+current second-pass prompt.
+
+## The severity floor, measured on the current pipeline (3.3.0)
+
+Three runs over the same diff, one per floor, same ground truth:
+
+| Floor | deep_review | gap_review | Dropped by the stage | Planted found | Missed |
+|-------|-------------|------------|----------------------|----------------|--------|
+| `high` | 8 | 3 | 2 | **11 / 11** | — |
+| `critical` | 8 | 3 | 0 | **11 / 11** | — |
+| `low` | 8 | 0 | 8 | **8 / 11** | open redirect, prototype pollution, weak crypto |
+
+**The floor is a hint to the model, not a filter.** The stage prompt says
+"drop findings below the severity floor rather than shrinking the JSON", and
+the model puts what it dropped into a separate `rejected` array. Nothing
+filters afterwards, so what survives is the model's judgement of its own
+ratings — and its judgements move between runs.
+
+Three consequences, all measured above:
+
+- **The sets are not nested.** A higher floor is not a subset of a lower one.
+  The severity is the model's own rating, and it moves from run to run.
+- **Raising the floor does not reliably shrink the output.** At `high` and at
+  `critical` the audit still reported all eleven planted weaknesses; the floor
+  dropped nothing real.
+- **Lowering the floor can lose real weaknesses.** At `low` the audit dropped
+  the open redirect, the prototype pollution and the weak crypto, and the
+  second pass then found nothing to replace them. The same happened on the
+  single-pass pipeline: at `low` it dropped the hardcoded password and the SQL
+  injection while adding findings nothing planted.
+
+So `medium` — the default — stays the default: it is the only floor that lost
+nothing in any run, on either version of the pipeline.
 
 ## What would move the numbers
 
