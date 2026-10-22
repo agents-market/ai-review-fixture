@@ -58,16 +58,45 @@ Six runs of a two-file diff are not a benchmark. The numbers describe this
 fixture: eleven weaknesses, planted to be obvious, in two files. A real
 repository has deeper flaws, and this says nothing about them.
 
+## The second pass (3.3.0)
+
+The pipeline now reviews twice. The second pass reads the first pass's findings
+and is asked for the gaps only — the weaknesses the first pass did not report.
+The same diff, the same ground truth, the default `medium` floor:
+
+| # | deep_review | gap_review | Planted found | Extra findings |
+|---|-------------|------------|----------------|-----------------|
+| 1 | 8 | 0 | 8 / 11 | 0 |
+| 2 | 8 | 3 | **11 / 11** | 0 |
+| 3 | 11 | 5 | **11 / 11** | 5 |
+| 4 | 8 | 3 | **11 / 11** | 0 |
+
+A fifth run died on the provider (`MiniMax API 529 overloaded_error`) before it
+produced anything.
+
+**The union is never worse than one pass.** The second pass only adds findings;
+it cannot lose one. In three of four runs it reached all eleven, and in the best
+run the union was exactly the eleven planted weaknesses — no duplicate, nothing
+invented.
+
+**Where the extra findings come from.** The second pass sometimes reports a
+weakness the first pass had already reported under a different CWE id or on a
+nearby line, and sometimes reports the *absence* of a control (no authentication
+on a route, no CSRF token). Two rules in its prompt address both: a weakness is
+the same weakness when it is the same code, and a finding needs the line where
+something wrong happens. The rules reduce the noise; they do not remove it.
+
+**Cost.** One more model call: about $0.035 per review instead of $0.018.
+
+Four prompt variants were measured over four runs each. They differ by one to
+three runs at 11 of 11 — inside the noise of a sample that size. The one that
+shipped is the variant whose second pass fires most reliably.
+
 ## What would move the numbers
 
-- **Review per file instead of per diff.** The model spends its eight
-  findings on a diff of any size; two files reviewed separately would each
-  get their own budget. This is a change to the pipeline, not to the
-  workflow.
-- **A second run, and the union.** The workflow already knows how to
-  suppress a duplicate comment, so a second pass would add its six unseen
-  findings without repeating the eight. It doubles the cost, and it doubles
-  the noise.
+- **Review per file instead of per diff.** The model spends its findings on a
+  diff of any size; two files reviewed separately would each get their own
+  budget. This is a change to the pipeline, not to the workflow.
 - **A catalogue that covers what the model wants to say.** The gaps are
   known: `CWE-1321` was reached for, and the model had to settle for
   `CWE-915`.
@@ -103,7 +132,13 @@ request. Two pipelines, one job each.
 ```bash
 python3 tools/ground_truth.py     # regenerate the ground truth from the markers
 python3 tools/measure.py 1        # measure the pull request
+node tools/probe.mjs              # run the pipeline locally, no pull request
 ```
+
+`probe.mjs` runs the audit on this repository's own diff and prints the same
+count without waiting for CI. It needs the pipeline runtime built somewhere and
+`MINIMAX_API_KEY` in the environment; `PIPELINE_RUNTIME` points it at the
+runtime.
 
 `measure.py` reads the comments the review posted and compares them with
 `.github/ground-truth.json`. `--since <ISO timestamp>` measures one run; a
