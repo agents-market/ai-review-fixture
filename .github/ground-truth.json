@@ -5,77 +5,88 @@
       "cwe": "CWE-79",
       "file": "src/api.ts",
       "line": 15,
-      "title": "Comment body written into innerHTML"
+      "title": "Comment body written into innerHTML",
+      "snippet": "page.innerHTML = `<div class=\"comment\">${comment.body}</div>`;"
     },
     {
       "id": "api.ts:21",
       "cwe": "CWE-918",
       "file": "src/api.ts",
       "line": 21,
-      "title": "Preview fetches whatever URL the caller sends"
+      "title": "Preview fetches whatever URL the caller sends",
+      "snippet": "const upstream = await fetch(req.query.url);"
     },
     {
       "id": "api.ts:29",
       "cwe": "CWE-338",
       "file": "src/api.ts",
       "line": 29,
-      "title": "Password reset token from Math.random"
+      "title": "Password reset token from Math.random",
+      "snippet": "const token = Math.random().toString(36).slice(2) + Date.now().toString(36);"
     },
     {
       "id": "api.ts:36",
       "cwe": "CWE-601",
       "file": "src/api.ts",
       "line": 36,
-      "title": "Redirect target taken from the query string"
+      "title": "Redirect target taken from the query string",
+      "snippet": "res.redirect(req.query.next);"
     },
     {
       "id": "api.ts:42",
       "cwe": "CWE-1321",
       "file": "src/api.ts",
       "line": 42,
-      "title": "Request body merged into the settings object"
+      "title": "Request body merged into the settings object",
+      "snippet": "Object.assign(settings, JSON.parse(req.body.patch));"
     },
     {
       "id": "api.ts:50",
       "cwe": "CWE-1333",
       "file": "src/api.ts",
       "line": 50,
-      "title": "Email pattern with nested quantifiers"
+      "title": "Email pattern with nested quantifiers",
+      "snippet": "return EMAIL_PATTERN.test(value);"
     },
     {
       "id": "orders.py:14",
       "cwe": "CWE-798",
       "file": "src/orders.py",
       "line": 14,
-      "title": "Database password written into the source"
+      "title": "Database password written into the source",
+      "snippet": "DB_PASSWORD = \"prod_pw_8f3a9c\""
     },
     {
       "id": "orders.py:25",
       "cwe": "CWE-89",
       "file": "src/orders.py",
       "line": 25,
-      "title": "Order id pasted into the SQL statement"
+      "title": "Order id pasted into the SQL statement",
+      "snippet": "query = f\"SELECT * FROM orders WHERE user_id = '{user_id}' AND id = '{order_id}'\""
     },
     {
       "id": "orders.py:32",
       "cwe": "CWE-78",
       "file": "src/orders.py",
       "line": 32,
-      "title": "Archive name reaches the shell"
+      "title": "Archive name reaches the shell",
+      "snippet": "os.system(f\"tar czf {out_dir}/{name}.tar.gz {out_dir}\")"
     },
     {
       "id": "orders.py:39",
       "cwe": "CWE-22",
       "file": "src/orders.py",
       "line": 39,
-      "title": "Upload name decides which file is read"
+      "title": "Upload name decides which file is read",
+      "snippet": "path = os.path.join(uploads_dir, filename)"
     },
     {
       "id": "orders.py:47",
       "cwe": "CWE-502",
       "file": "src/orders.py",
       "line": 47,
-      "title": "Session cookie deserialized with pickle"
+      "title": "Session cookie deserialized with pickle",
+      "snippet": "return pickle.loads(blob)"
     }
   ]
 }

@@ -32,6 +32,15 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 REPO = "agents-market/ai-review-fixture"
 CWE = re.compile(r"CWE-\d+", re.I)
 
+# Words that carry no meaning in a title: "the user id goes into the SQL as
+# text" must not match every comment because it starts with "the".
+STOPWORDS = {
+    "there", "their", "these", "those", "which", "while", "where", "into",
+    "onto", "from", "with", "into", "that", "this", "the", "and", "for",
+    "not", "but", "can", "may", "its", "are", "was", "were", "has", "have",
+    "when", "than", "then", "them", "they", "here", "over", "under",
+}
+
 
 def gh(*args):
     out = subprocess.run(["gh", *args], capture_output=True, text=True, check=True)
@@ -88,11 +97,15 @@ def main() -> int:
             line = best.get("line") or best.get("original_line")
             found.append((v, line, best.get("body", "").split("\n")[0][:70]))
         else:
-            # The weakness may still be reported without its id.
+            # The weakness may still be reported without its id. The words of
+            # the title that carry the meaning — the stopwords of a title like
+            # "The user id goes into the SQL as text" match every comment.
+            words = [w for w in v["title"].lower().split()
+                     if len(w) >= 5 and w not in STOPWORDS]
             loose = [
                 c for c in inline
                 if c.get("path") == v["file"]
-                and any(w in (c.get("body") or "").lower() for w in v["title"].lower().split()[:3])
+                and any(w in (c.get("body") or "").lower() for w in words)
             ]
             missed.append((v, bool(loose)))
 
