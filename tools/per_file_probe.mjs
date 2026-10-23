@@ -105,7 +105,8 @@ const visible = (findings) => {
 };
 
 // The truth: a comment names the same weakness class on the same file.
-const canon = { 'CWE-330': 'CWE-338', 'CWE-259': 'CWE-798', 'CWE-915': 'CWE-1321' };
+const canon = { 'CWE-330': 'CWE-338', 'CWE-259': 'CWE-798', 'CWE-915': 'CWE-1321',
+                'CWE-321': 'CWE-798' };
 const plantedOf = (f) => {
   const id = cweOf(f);
   const cls = canon[id] || id;
