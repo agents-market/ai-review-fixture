@@ -1,7 +1,9 @@
 # Ground truth
 
-Ten deliberate vulnerabilities. The line numbers come from the markers in
-the code (`tools/ground_truth.py`), so they cannot drift.
+11 deliberate vulnerabilities. The line numbers come from the
+markers in the code (`tools/ground_truth.py`), so they cannot drift; the
+markers themselves are taken out of the diff before the review runs, so
+the review does not read the answers.
 
 | # | CWE | File | Line | What it is |
 |---|---|---|---|---|
@@ -17,4 +19,5 @@ the code (`tools/ground_truth.py`), so they cannot drift.
 | 10 | `CWE-22` | `src/orders.py` | 39 | Upload name decides which file is read |
 | 11 | `CWE-502` | `src/orders.py` | 47 | Session cookie deserialized with pickle |
 
-Regenerate with `python3 tools/ground_truth.py`.
+Regenerate with `python3 tools/ground_truth.py`, check with
+`python3 tools/ground_truth.py --verify`.
