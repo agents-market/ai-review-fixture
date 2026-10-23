@@ -13,11 +13,14 @@ weakness three lines away from the planted one found it. The line distance is
 printed, so a near miss is visible.
 
 Usage:
-  python3 tools/measure.py [pull_request_number] [--since ISO8601]
+  python3 tools/measure.py [pull_request_number] [--since ISO8601] [--truth PATH]
 
 `--since` measures one run: a pull request accumulates the comments of every
 run, and the union of two runs answers a different question than either of
 them does.
+
+`--truth` picks the ground truth of another fixture — the second pull request
+has its own.
 """
 import json
 import pathlib
@@ -51,7 +54,10 @@ def main() -> int:
     since = None
     if "--since" in sys.argv:
         since = sys.argv[sys.argv.index("--since") + 1]
-    truth = json.loads((ROOT / ".github/ground-truth.json").read_text())["vulnerabilities"]
+    truth_path = ROOT / ".github/ground-truth.json"
+    if "--truth" in sys.argv:
+        truth_path = ROOT / sys.argv[sys.argv.index("--truth") + 1]
+    truth = json.loads(truth_path.read_text())["vulnerabilities"]
     every = comments(pr)
     summary = issue_comments(pr)
     # The reference workflow reviews with both pipelines. Each owns its threads
