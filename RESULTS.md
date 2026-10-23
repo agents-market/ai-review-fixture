@@ -315,10 +315,10 @@ diff, the `medium` floor, same code:
 | 3 | 10 / 24 | 17 | 2 | 60s |
 | 4 | 15 / 24 | 16 | 2 | 50s |
 
-**Median 13.5 of 24 — 56%.** The CI run on the pull request (the consumer's
-path, one run) found 9 of 24 by id. The spread between runs is five
-weaknesses wide, which is what a shared budget does: which files get looked
-at depends on the run.
+**Median 13.5 of 24 — 56%.** Two CI runs on the pull request (the consumer's
+path) found 9 and 11 of 24 by id — the same spread the local runs show. The
+spread between runs is five weaknesses wide, which is what a shared budget
+does: which files get looked at depends on the run.
 
 ### The same review, file by file
 
