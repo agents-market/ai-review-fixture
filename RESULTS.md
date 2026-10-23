@@ -272,6 +272,100 @@ of the schema, twice, and the job went red — while the pull request kept the
 standing review from the previous run. A failed run leaves the last good
 review in place and takes no finding back.
 
+## The answers were in the diff (2026-10-23)
+
+The ground truth was written as comments in the code — `# VULN CWE-89: order
+id pasted into the SQL statement` — and the review reads the diff. Every
+number above was measured with the CWE id and a description of the weakness
+one line above the weakness.
+
+The markers can now be taken out of the code while the line numbers stay true
+(`tools/ground_truth.py --strip`), and the truth can be checked against the
+code afterwards (`--verify`, against the line of code it names). Both
+fixtures are measured without their answers.
+
+**On the small fixture, one run finds ten of the eleven and invents nothing.**
+The one it missed is the hard-coded password: the model did not name it in
+that run, and the comment from the previous run stays standing — a review
+does not take a finding back because one run missed it. The union over two
+runs is eleven of eleven.
+
+So eleven of eleven was never true. It was eleven of eleven with the answers
+in the diff.
+
+## The larger change: ten files, twenty-four weaknesses
+
+Two files are enough to measure the comment rule and not enough to measure a
+review that has to cover a whole change. The second pull request is ten
+files and twenty-four planted weaknesses, spread unevenly — three in one
+file, one in another.
+
+The ground truth lives on `main` and the code carries blank lines where the
+markers were, so the answers are not in the diff.
+
+### One review of the whole change
+
+Four runs of the published `code-review-security-audit@3.4.0` over the whole
+diff, the `medium` floor, same code:
+
+| Run | Named by their own id | Comments | Model calls | Time |
+|-----|----------------------|----------|-------------|------|
+| 1 | 14 / 24 | 16 | 2 | 45s |
+| 2 | 13 / 24 | 16 | 2 | 42s |
+| 3 | 10 / 24 | 17 | 2 | 60s |
+| 4 | 15 / 24 | 16 | 2 | 50s |
+
+**Median 13.5 of 24 — 56%.** The CI run on the pull request (the consumer's
+path, one run) found 9 of 24 by id. The spread between runs is five
+weaknesses wide, which is what a shared budget does: which files get looked
+at depends on the run.
+
+### The same review, file by file
+
+Three runs of the same pipeline over the same code, one diff per file:
+
+| Run | Named by their own id | Comments | Model calls | Time |
+|-----|----------------------|----------|-------------|------|
+| 1 | 18 / 24 | 41 | 20 | 241s |
+| 2 | 20 / 24 | 43 | 20 | 261s |
+| 3 | 20 / 24 | 49 | 20 | 279s |
+
+**Median 20 of 24 — 83%, and a spread of two instead of five.**
+
+### What it costs, and where it comes from
+
+The budget is the mechanism. The pipeline asks for at most eight findings per
+pass and runs two passes, so **one review of a change cannot report more
+than sixteen findings whatever the change's size** — and the measured
+sixteen is exactly that. Ten files of a real change share one budget of
+sixteen; reviewed one at a time, each file has its own.
+
+- **Model calls: ten times as many.** Twenty against two. At the pipeline's
+  notional rate (~$0.035 a review) a ten-file change costs ~$0.35 instead of
+  ~$0.035. In local mode nothing is charged; the tokens are real either way.
+- **Time: five times as long.** 261s against 50s, one file after another. A
+  matrix would run the files in parallel and bring the wall time back to one
+  review, at the price of ten runners.
+- **Comments: two and a half times as many.** 43 against 16.
+
+**The extra comments are mostly real.** Of the 21 comments in the first
+file-by-file run that did not answer a planted weakness: 18 name weaknesses
+that really are in the code and are not in the planted list — the fixture has
+no authentication on most of its routes, and the review says so — and 3 are
+planted weaknesses under another id (`CWE-326` for `CWE-327`, `CWE-526` for
+`CWE-209`, `CWE-269` for `CWE-352`). None is invented.
+
+### What this does not say
+
+- The planted list is a subset. The fixture's code holds more weaknesses
+  than the 24 marked, so "invented" cannot be measured here — only the small
+  fixture, whose truth is exhaustive, can say that, and it says: nothing
+  invented.
+- The id is the model's judgement. The same weakness is named `CWE-209` by
+  one run and `CWE-200` by another; the reader sees a comment either way, but
+  a class keyed by the id can put two comments on one weakness.
+- Ten files and twenty-four weaknesses are still a fixture, not a benchmark.
+
 ## The style review, measured the same way
 
 The style pipeline runs on the same pull request, and the first thing the

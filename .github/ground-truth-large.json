@@ -1,0 +1,196 @@
+{
+  "vulnerabilities": [
+    {
+      "id": "orders.ts:13",
+      "cwe": "CWE-89",
+      "file": "src-large/api/orders.ts",
+      "line": 13,
+      "title": "The user id goes into the SQL as text",
+      "snippet": "const rows = await db.query(`SELECT * FROM orders WHERE user_id = '${userId}'`);"
+    },
+    {
+      "id": "orders.ts:20",
+      "cwe": "CWE-1321",
+      "file": "src-large/api/orders.ts",
+      "line": 20,
+      "title": "The request body is merged into the order",
+      "snippet": "Object.assign(order, req.body);"
+    },
+    {
+      "id": "orders.ts:29",
+      "cwe": "CWE-1333",
+      "file": "src-large/api/orders.ts",
+      "line": 29,
+      "title": "The email pattern has nested quantifiers",
+      "snippet": "return EMAIL_PATTERN.test(value);"
+    },
+    {
+      "id": "uploads.ts:14",
+      "cwe": "CWE-434",
+      "file": "src-large/api/uploads.ts",
+      "line": 14,
+      "title": "Any kind of file is accepted",
+      "snippet": "await file.mv(path.join(UPLOAD_DIR, file.name));"
+    },
+    {
+      "id": "uploads.ts:20",
+      "cwe": "CWE-22",
+      "file": "src-large/api/uploads.ts",
+      "line": 20,
+      "title": "The name of the document decides which file is read",
+      "snippet": "const target = path.join(UPLOAD_DIR, req.params.name);"
+    },
+    {
+      "id": "uploads.ts:26",
+      "cwe": "CWE-79",
+      "file": "src-large/api/uploads.ts",
+      "line": 26,
+      "title": "The document name is written into the page",
+      "snippet": "res.send(`<h1>${req.params.name}</h1>`);"
+    },
+    {
+      "id": "users.ts:12",
+      "cwe": "CWE-89",
+      "file": "src-large/api/users.ts",
+      "line": 12,
+      "title": "The profile id goes into the SQL as text",
+      "snippet": "const rows = await db.query(`SELECT id, name, bio FROM users WHERE id = '${req.params.id}'`);"
+    },
+    {
+      "id": "users.ts:19",
+      "cwe": "CWE-79",
+      "file": "src-large/api/users.ts",
+      "line": 19,
+      "title": "The biography goes into the page as markup",
+      "snippet": "res.send(`<section class=\"profile\">${rows[0].bio}</section>`);"
+    },
+    {
+      "id": "users.ts:27",
+      "cwe": "CWE-362",
+      "file": "src-large/api/users.ts",
+      "line": 27,
+      "title": "The check and the write are two separate operations",
+      "snippet": "if (!current.email_opt_in && enabled) {"
+    },
+    {
+      "id": "webhooks.ts:14",
+      "cwe": "CWE-918",
+      "file": "src-large/api/webhooks.ts",
+      "line": 14,
+      "title": "The webhook target is whatever the caller sent",
+      "snippet": "await fetch(target, { method: \"POST\", body: JSON.stringify(req.body) });"
+    },
+    {
+      "id": "webhooks.ts:21",
+      "cwe": "CWE-347",
+      "file": "src-large/api/webhooks.ts",
+      "line": 21,
+      "title": "The signature is accepted whatever it says",
+      "snippet": "if (signature !== undefined) {"
+    },
+    {
+      "id": "password.ts:8",
+      "cwe": "CWE-798",
+      "file": "src-large/auth/password.ts",
+      "line": 8,
+      "title": "The signing key is written into the source",
+      "snippet": "const SIGNING_KEY = \"s3cr3t-signing-key-9f2c\";"
+    },
+    {
+      "id": "password.ts:12",
+      "cwe": "CWE-327",
+      "file": "src-large/auth/password.ts",
+      "line": 12,
+      "title": "The payload is sealed with a cipher that is no longer safe",
+      "snippet": "const cipher = crypto.createCipheriv("
+    },
+    {
+      "id": "session.ts:9",
+      "cwe": "CWE-338",
+      "file": "src-large/auth/session.ts",
+      "line": 9,
+      "title": "The session id comes from Math.random",
+      "snippet": "const sid = Math.random().toString(36).slice(2) + Date.now().toString(36);"
+    },
+    {
+      "id": "session.ts:12",
+      "cwe": "CWE-614",
+      "file": "src-large/auth/session.ts",
+      "line": 12,
+      "title": "The cookie is set without the Secure flag",
+      "snippet": "res.cookie(\"sid\", sid, { httpOnly: true });"
+    },
+    {
+      "id": "session.ts:19",
+      "cwe": "CWE-384",
+      "file": "src-large/auth/session.ts",
+      "line": 19,
+      "title": "The client sends the session id and it is taken as it is",
+      "snippet": "sessions.set(sid, { userId });"
+    },
+    {
+      "id": "email.ts:9",
+      "cwe": "CWE-78",
+      "file": "src-large/jobs/email.ts",
+      "line": 9,
+      "title": "The recipient goes into the shell command",
+      "snippet": "exec(`mail -s \"${subject}\" ${to} < /tmp/report.txt`);"
+    },
+    {
+      "id": "email.ts:14",
+      "cwe": "CWE-209",
+      "file": "src-large/jobs/email.ts",
+      "line": 14,
+      "title": "The failure text carries the secret to the customer",
+      "snippet": "return `<p>Could not charge order ${orderId}: ${error.message} (key ${process.env.STRIPE_KEY})</p>`;"
+    },
+    {
+      "id": "importer.py:10",
+      "cwe": "CWE-611",
+      "file": "src-large/jobs/importer.py",
+      "line": 10,
+      "title": "The parser resolves entities that point outside",
+      "snippet": "parser = etree.XMLParser(resolve_entities=True, no_network=False)"
+    },
+    {
+      "id": "importer.py:16",
+      "cwe": "CWE-502",
+      "file": "src-large/jobs/importer.py",
+      "line": 16,
+      "title": "The settings blob is unpickled",
+      "snippet": "return pickle.loads(blob)"
+    },
+    {
+      "id": "crypto.ts:9",
+      "cwe": "CWE-311",
+      "file": "src-large/lib/crypto.ts",
+      "line": 9,
+      "title": "The profile goes to disk as plain text",
+      "snippet": "fs.writeFileSync(`/var/data/profiles/${userId}.json`, JSON.stringify(profile));"
+    },
+    {
+      "id": "admin.ts:12",
+      "cwe": "CWE-601",
+      "file": "src-large/web/admin.ts",
+      "line": 12,
+      "title": "The redirect target comes from the query string",
+      "snippet": "res.redirect(String(req.query.to ?? \"/\"));"
+    },
+    {
+      "id": "admin.ts:17",
+      "cwe": "CWE-639",
+      "file": "src-large/web/admin.ts",
+      "line": 17,
+      "title": "The user id in the path is the only key that is checked",
+      "snippet": "const user = await db.one(\"SELECT * FROM users WHERE id = ?\", [req.params.id]);"
+    },
+    {
+      "id": "admin.ts:23",
+      "cwe": "CWE-352",
+      "file": "src-large/web/admin.ts",
+      "line": 23,
+      "title": "The role change asks for no token",
+      "snippet": "await db.query(\"UPDATE users SET role = ? WHERE id = ?\", [req.body.role, req.params.id]);"
+    }
+  ]
+}
